@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apex AI Trader</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --sidebar: #0f0f0f;
+      --surface: #141414;
+      --border: #1f1f1f;
+      --green: #00c805;
+      --green-dim: rgba(0,200,5,0.08);
+      --red: #ff5000;
+      --red-dim: rgba(255,80,0,0.08);
+      --text: #f5f5f5;
+      --muted: #666;
+      --muted2: #333;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    aside {
+      width: 260px;
+      min-width: 260px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      height: 100vh;
+    }
+
+    .sidebar-logo {
+      padding: 1.5rem 1.5rem 1rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: -0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-section {
+      padding: 1.25rem 1.5rem 0.5rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .sidebar-stat {
+      padding: 0.6rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sidebar-stat-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .sidebar-stat-value {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .sidebar-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0.75rem 1.5rem;
+    }
+
+    /* market selector */
+    .market-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 1.5rem;
+      cursor: pointer;
+      border-radius: 0;
+      transition: background 0.15s;
+      border: none;
+      background: none;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 500;
+      width: 100%;
+      text-align: left;
+    }
+
+    .market-btn:hover { background: var(--surface); color: var(--text); }
+    .market-btn.active { background: var(--surface); color: var(--text); }
+
+    .market-btn .ticker {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text);
+      min-width: 60px;
+    }
+
+    .market-btn .exchange-tag {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-left: auto;
+      background: var(--muted2);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      padding: 1.25rem 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .trade-btn {
+      width: 100%;
+      padding: 0.8rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s, transform 0.1s;
+      letter-spacing: 0.02em;
+    }
+
+    .trade-btn:active { transform: scale(0.98); }
+    .trade-btn:hover  { opacity: 0.88; }
+    .trade-btn.start  { background: var(--green); color: #000; }
+    .trade-btn.stop   { background: var(--red);   color: #fff; }
+
+    /* ── MAIN ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* top bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 56px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+    }
+
+    .topbar-symbol {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .topbar-price {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .topbar-pl {
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .topbar-pl.pos { color: var(--green); }
+    .topbar-pl.neg { color: var(--red); }
+    .topbar-pl.neu { color: var(--muted); }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+
+    .status-pill.running { background: var(--green-dim); color: var(--green); }
+    .status-pill.stopped { background: var(--surface);   color: var(--muted); }
+
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .pulse { animation: pulse 1.5s infinite; }
+
+    /* content area */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 1.5rem 2rem;
+      gap: 1.5rem;
+    }
+
+    /* mini stats row */
+    .stats-row {
+      display: flex;
+      gap: 1px;
+      background: var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .stat-cell {
+      flex: 1;
+      background: var(--surface);
+      padding: 1rem 1.25rem;
+    }
+
+    .stat-cell-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 0.35rem;
+    }
+
+    .stat-cell-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    /* log */
+    .log-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .log-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .log-count {
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    .log-box {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow-y: auto;
+      min-height: 0;
+    }
+
+    .log-box::-webkit-scrollbar { width: 3px; }
+    .log-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .log-row {
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      gap: 1rem;
+      padding: 0.55rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.78rem;
+      line-height: 1.5;
+      align-items: baseline;
+    }
+
+    .log-row:last-child { border-bottom: none; }
+    .log-row.buy  { border-left: 2px solid var(--green); background: var(--green-dim); }
+    .log-row.sell { border-left: 2px solid var(--red);   background: var(--red-dim); }
+
+    .log-t { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .log-m { color: #aaa; }
+    .log-row.buy  .log-m { color: var(--green); font-weight: 600; }
+    .log-row.sell .log-m { color: var(--red);   font-weight: 600; }
+    .log-row.strategy .log-m { color: #60a5fa; }
+    .log-row.error    .log-m { color: var(--red); }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="sidebar-logo">Apex AI</div>
+
+    <div class="sidebar-section">Markets</div>
+    <button class="market-btn active" id="btn-nyse" onclick="selectMarket('nyse')">
+      <span class="ticker">AAPL</span>
+      <span>Apple Inc.</span>
+      <span class="exchange-tag">NYSE</span>
+    </button>
+    <button class="market-btn" id="btn-nse" onclick="selectMarket('nse')">
+      <span class="ticker">TITAN</span>
+      <span>Titan Company</span>
+      <span class="exchange-tag">NSE</span>
+    </button>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">Portfolio</div>
+    <div class="sidebar-stat">
+      <span class="sidebar-stat-label">Cash</span>
+      <span class="sidebar-stat-value" id="sb-cash">—</span>
+    </div>
+    <div class="sidebar-stat">
+      <span class="sidebar-stat-label">Holdings</span>
+      <span class="sidebar-stat-value" id="sb-holdings">—</span>
+    </div>
+    <div class="sidebar-stat">
+      <span class="sidebar-stat-label">Total P&L</span>
+      <span class="sidebar-stat-value" id="sb-pl">—</span>
+    </div>
+
+    <div class="sidebar-bottom">
+      <button class="trade-btn start" id="toggleBtn" onclick="toggleTrader()">Start Trading</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- top bar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-symbol" id="topSymbol">—</span>
+        <span class="topbar-price" id="topPrice">—</span>
+        <span class="topbar-pl neu" id="topPl">—</span>
+      </div>
+      <div class="status-pill stopped" id="statusPill">
+        <div class="status-dot"></div>
+        <span id="statusText">Stopped</span>
+      </div>
+    </div>
+
+    <!-- content -->
+    <div class="content">
+
+      <div class="stats-row">
+        <div class="stat-cell">
+          <div class="stat-cell-label">Current Price</div>
+          <div class="stat-cell-value" id="sc-price">—</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell-label">Available Cash</div>
+          <div class="stat-cell-value" id="sc-cash">—</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell-label">Holdings</div>
+          <div class="stat-cell-value" id="sc-holdings">—</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell-label">Profit / Loss</div>
+          <div class="stat-cell-value" id="sc-pl">—</div>
+        </div>
+      </div>
+
+      <div class="log-header">
+        <span class="log-title">Activity Log</span>
+        <span class="log-count" id="logCount"></span>
+      </div>
+
+      <div class="log-box" id="logsContent">
+        <div class="log-row">
+          <span class="log-t">--:--</span>
+          <span class="log-m">System ready. Waiting to start…</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let isRunning = false;
+    let currency  = '$';
+    let market    = 'nyse';
+
+    function selectMarket(m) {
+      if (isRunning) return;
+      market = m;
+      document.querySelectorAll('.market-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn-' + m).classList.add('active');
+      fetch('/api/clear_logs', { method: 'POST' }).then(pollStatus);
+    }
+
+    function classify(msg) {
+      if (msg.includes('BUY'))      return 'buy';
+      if (msg.includes('SELL'))     return 'sell';
+      if (msg.includes('Strategy')) return 'strategy';
+      if (msg.includes('Error'))    return 'error';
+      return '';
+    }
+
+    function fmt(val, cur) {
+      return (val >= 0 ? '' : '') + cur + Math.abs(val).toFixed(2);
+    }
+
+    function updateUI(data) {
+      isRunning = data.running;
+      currency  = data.currency;
+
+      const pill   = document.getElementById('statusPill');
+      const stText = document.getElementById('statusText');
+      const btn    = document.getElementById('toggleBtn');
+      const dot    = pill.querySelector('.status-dot');
+
+      if (isRunning) {
+        pill.className = 'status-pill running';
+        stText.textContent = data.symbol;
+        dot.classList.add('pulse');
+        btn.textContent = 'Stop Trading';
+        btn.className   = 'trade-btn stop';
+        document.querySelectorAll('.market-btn').forEach(b => b.style.pointerEvents = 'none');
+        document.getElementById('topSymbol').textContent = data.symbol;
+      } else {
+        pill.className = 'status-pill stopped';
+        stText.textContent = 'Stopped';
+        dot.classList.remove('pulse');
+        btn.textContent = 'Start Trading';
+        btn.className   = 'trade-btn start';
+        document.querySelectorAll('.market-btn').forEach(b => b.style.pointerEvents = '');
+      }
+
+      const price = currency + data.price.toFixed(2);
+      const pl    = data.profit_loss;
+      const plStr = (pl >= 0 ? '+' : '-') + currency + Math.abs(pl).toFixed(2);
+      const plCls = pl > 0 ? 'pos' : pl < 0 ? 'neg' : 'neu';
+      const plColor = pl > 0 ? 'var(--green)' : pl < 0 ? 'var(--red)' : '';
+
+      const holdings = Object.entries(data.holdings);
+      const holdStr  = holdings.length ? holdings.map(([k,v]) => `${k}: ${v}`).join(', ') : 'None';
+
+      // topbar
+      document.getElementById('topPrice').textContent = price;
+      const topPl = document.getElementById('topPl');
+      topPl.textContent = plStr;
+      topPl.className   = 'topbar-pl ' + plCls;
+
+      // sidebar
+      document.getElementById('sb-cash').textContent     = currency + data.cash.toFixed(2);
+      document.getElementById('sb-holdings').textContent = holdStr;
+      const sbPl = document.getElementById('sb-pl');
+      sbPl.textContent  = plStr;
+      sbPl.style.color  = plColor;
+
+      // stat cells
+      document.getElementById('sc-price').textContent    = price;
+      document.getElementById('sc-cash').textContent     = currency + data.cash.toFixed(2);
+      document.getElementById('sc-holdings').textContent = holdStr;
+      const scPl = document.getElementById('sc-pl');
+      scPl.textContent = plStr;
+      scPl.style.color = plColor;
+
+      // logs
+      const html = data.logs.map(log => {
+        const c = classify(log.message);
+        return `<div class="log-row ${c}"><span class="log-t">${log.timestamp}</span><span class="log-m">${log.message}</span></div>`;
+      }).join('');
+
+      const box = document.getElementById('logsContent');
+      if (box.innerHTML !== html) {
+        box.innerHTML = html;
+        box.scrollTop = box.scrollHeight;
+      }
+
+      document.getElementById('logCount').textContent = data.logs.length ? data.logs.length + ' events' : '';
+    }
+
+    async function pollStatus() {
+      try {
+        const r = await fetch('/api/status');
+        updateUI(await r.json());
+      } catch(e) {}
+    }
+
+    async function toggleTrader() {
+      if (isRunning) {
+        await fetch('/api/stop', { method: 'POST' });
+      } else {
+        const symbol = market === 'nse' ? 'TITAN.NS' : 'AAPL';
+        const cur    = market === 'nse' ? '₹' : '$';
+        await fetch('/api/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ symbol, currency: cur })
+        });
+      }
+      pollStatus();
+    }
+
+    setInterval(pollStatus, 1000);
+    pollStatus();
+  </script>
+</body>
+</html>
