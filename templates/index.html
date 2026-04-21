@@ -315,6 +315,149 @@
     .log-row.sell .log-m { color: var(--red);   font-weight: 600; }
     .log-row.strategy .log-m { color: #60a5fa; }
     .log-row.error    .log-m { color: var(--red); }
+
+    /* ── TABS ── */
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+    }
+
+    .tab-btn {
+      padding: 0.65rem 1.1rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      font-family: inherit;
+      color: var(--muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: color 0.15s;
+      margin-bottom: -1px;
+    }
+
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--text); border-bottom-color: var(--green); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ── BACKTEST PANEL ── */
+    .bt-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .bt-form-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .bt-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .bt-field label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .bt-field select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.82rem;
+      padding: 0.5rem 0.75rem;
+      appearance: none;
+      cursor: pointer;
+      min-width: 110px;
+    }
+
+    .bt-field select:focus { outline: 1px solid var(--green); }
+
+    .bt-run-btn {
+      padding: 0.5rem 1.4rem;
+      background: var(--green);
+      color: #000;
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+
+    .bt-run-btn:hover   { opacity: 0.85; }
+    .bt-run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .bt-status {
+      font-size: 0.78rem;
+      color: var(--muted);
+      align-self: center;
+    }
+
+    .bt-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .bt-metric {
+      background: var(--surface);
+      padding: 1.1rem 1.25rem;
+    }
+
+    .bt-metric-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 0.4rem;
+    }
+
+    .bt-metric-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .bt-metric-sub {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+
+    .bt-empty {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
   </style>
 </head>
 <body>
@@ -372,41 +515,89 @@
       </div>
     </div>
 
-    <!-- content -->
-    <div class="content">
-
-      <div class="stats-row">
-        <div class="stat-cell">
-          <div class="stat-cell-label">Current Price</div>
-          <div class="stat-cell-value" id="sc-price">—</div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-cell-label">Available Cash</div>
-          <div class="stat-cell-value" id="sc-cash">—</div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-cell-label">Holdings</div>
-          <div class="stat-cell-value" id="sc-holdings">—</div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-cell-label">Profit / Loss</div>
-          <div class="stat-cell-value" id="sc-pl">—</div>
-        </div>
-      </div>
-
-      <div class="log-header">
-        <span class="log-title">Activity Log</span>
-        <span class="log-count" id="logCount"></span>
-      </div>
-
-      <div class="log-box" id="logsContent">
-        <div class="log-row">
-          <span class="log-t">--:--</span>
-          <span class="log-m">System ready. Waiting to start…</span>
-        </div>
-      </div>
-
+    <!-- tab bar -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-live"     onclick="switchTab('live')">Live Trading</button>
+      <button class="tab-btn"        id="tab-backtest" onclick="switchTab('backtest')">Backtest</button>
     </div>
+
+    <!-- LIVE panel -->
+    <div class="tab-panel active" id="panel-live">
+      <div class="content">
+
+        <div class="stats-row">
+          <div class="stat-cell">
+            <div class="stat-cell-label">Current Price</div>
+            <div class="stat-cell-value" id="sc-price">—</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-cell-label">Available Cash</div>
+            <div class="stat-cell-value" id="sc-cash">—</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-cell-label">Holdings</div>
+            <div class="stat-cell-value" id="sc-holdings">—</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-cell-label">Profit / Loss</div>
+            <div class="stat-cell-value" id="sc-pl">—</div>
+          </div>
+        </div>
+
+        <div class="log-header">
+          <span class="log-title">Activity Log</span>
+          <span class="log-count" id="logCount"></span>
+        </div>
+
+        <div class="log-box" id="logsContent">
+          <div class="log-row">
+            <span class="log-t">--:--</span>
+            <span class="log-m">System ready. Waiting to start…</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- BACKTEST panel -->
+    <div class="tab-panel" id="panel-backtest">
+      <div class="bt-content">
+
+        <div class="bt-form-row">
+          <div class="bt-field">
+            <label>Market</label>
+            <select id="bt-market">
+              <option value="nyse">AAPL (NYSE)</option>
+              <option value="nse">TITAN (NSE)</option>
+            </select>
+          </div>
+          <div class="bt-field">
+            <label>Period</label>
+            <select id="bt-period">
+              <option value="1mo">1 month</option>
+              <option value="3mo" selected>3 months</option>
+              <option value="6mo">6 months</option>
+              <option value="1y">1 year</option>
+            </select>
+          </div>
+          <div class="bt-field">
+            <label>Interval</label>
+            <select id="bt-interval">
+              <option value="1d" selected>Daily (1d)</option>
+              <option value="1h">Hourly (1h)</option>
+            </select>
+          </div>
+          <button class="bt-run-btn" id="bt-run-btn" onclick="runBacktest()">Run Backtest</button>
+          <span class="bt-status" id="bt-status"></span>
+        </div>
+
+        <div id="bt-results-area" class="bt-empty">
+          Select parameters above and click Run Backtest.
+        </div>
+
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -529,6 +720,105 @@
 
     setInterval(pollStatus, 1000);
     pollStatus();
+
+    // ── TAB SWITCHING ──
+    function switchTab(tab) {
+      ['live', 'backtest'].forEach(t => {
+        document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+        document.getElementById('panel-' + t).classList.toggle('active', t === tab);
+      });
+    }
+
+    // ── BACKTEST ──
+    async function runBacktest() {
+      const mkt      = document.getElementById('bt-market').value;
+      const symbol   = mkt === 'nse' ? 'TITAN.NS' : 'AAPL';
+      const cur      = mkt === 'nse' ? '₹' : '$';
+      const period   = document.getElementById('bt-period').value;
+      const interval = document.getElementById('bt-interval').value;
+
+      const btn    = document.getElementById('bt-run-btn');
+      const status = document.getElementById('bt-status');
+      btn.disabled      = true;
+      status.textContent = 'Fetching data…';
+
+      try {
+        const r    = await fetch('/api/backtest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ symbol, currency: cur, period, interval })
+        });
+        const data = await r.json();
+        status.textContent = '';
+        renderBacktestResults(data, cur);
+      } catch (e) {
+        status.textContent = 'Request failed.';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function coloured(value, isGood) {
+      const c = isGood ? 'var(--green)' : 'var(--red)';
+      return `style="color:${c}"`;
+    }
+
+    function renderBacktestResults(d, cur) {
+      const area = document.getElementById('bt-results-area');
+
+      if (d.error) {
+        area.className   = 'bt-empty';
+        area.textContent = 'Error: ' + d.error;
+        return;
+      }
+
+      const retGood  = d.total_return_pct  >= 0;
+      const plGood   = d.total_return_pct  >= 0;
+      const ddBad    = d.max_drawdown_pct  < -10;
+      const sharpeOk = d.sharpe_ratio      >= 1;
+
+      area.className = '';
+      area.innerHTML = `
+        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:0.25rem;text-transform:uppercase;letter-spacing:0.07em;font-weight:600;">
+          ${d.symbol} &nbsp;·&nbsp; ${d.period} &nbsp;·&nbsp; ${d.interval} &nbsp;·&nbsp; ${d.bars_analysed} bars
+        </div>
+        <div class="bt-metrics">
+          <div class="bt-metric">
+            <div class="bt-metric-label">Total Return</div>
+            <div class="bt-metric-value" ${coloured(d.total_return_pct, retGood)}>
+              ${d.total_return_pct >= 0 ? '+' : ''}${d.total_return_pct.toFixed(2)}%
+            </div>
+            <div class="bt-metric-sub">${cur}${d.initial_cash.toLocaleString()} → ${cur}${d.final_value.toLocaleString()}</div>
+          </div>
+          <div class="bt-metric">
+            <div class="bt-metric-label">Win Rate</div>
+            <div class="bt-metric-value" ${coloured(d.win_rate_pct, d.win_rate_pct >= 50)}>
+              ${d.win_rate_pct.toFixed(1)}%
+            </div>
+            <div class="bt-metric-sub">${d.sell_trades} closed trades</div>
+          </div>
+          <div class="bt-metric">
+            <div class="bt-metric-label">Sharpe Ratio</div>
+            <div class="bt-metric-value" ${coloured(d.sharpe_ratio, sharpeOk)}>
+              ${d.sharpe_ratio.toFixed(3)}
+            </div>
+            <div class="bt-metric-sub">annualised · rf 5%</div>
+          </div>
+          <div class="bt-metric">
+            <div class="bt-metric-label">Max Drawdown</div>
+            <div class="bt-metric-value" ${coloured(d.max_drawdown_pct, !ddBad)}>
+              ${d.max_drawdown_pct.toFixed(2)}%
+            </div>
+            <div class="bt-metric-sub">peak-to-trough</div>
+          </div>
+          <div class="bt-metric">
+            <div class="bt-metric-label">Total Trades</div>
+            <div class="bt-metric-value">${d.total_trades}</div>
+            <div class="bt-metric-sub">B: ${d.buy_trades} &nbsp; S: ${d.sell_trades}</div>
+          </div>
+        </div>
+      `;
+    }
   </script>
 </body>
 </html>

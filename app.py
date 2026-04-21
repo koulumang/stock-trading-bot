@@ -90,5 +90,16 @@ def clear_logs():
         TRADER_STATE["logs"] = []
     return jsonify({"status": "success"})
 
+@app.route('/api/backtest', methods=['POST'])
+def run_backtest_endpoint():
+    from backtest import run_backtest
+    data     = request.json or {}
+    symbol   = data.get('symbol', 'AAPL').strip().upper()
+    currency = data.get('currency', '$')
+    period   = data.get('period', '3mo')
+    interval = data.get('interval', '1d')
+    result   = run_backtest(symbol, currency, period, interval)
+    return jsonify(result)
+
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
