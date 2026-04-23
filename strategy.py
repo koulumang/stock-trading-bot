@@ -67,8 +67,8 @@ def get_trade_decision(symbol, history_data, current_price, portfolio_context, c
         if current_qty == 0 and buy_signal and cash > current_price:
             invest   = min(total_value * MAX_POSITION_PCT, cash * 0.95)
             quantity = int(invest // current_price)
-            if quantity < 1:
-                return {"action": "HOLD", "quantity": 0, "reasoning": "Insufficient cash."}
+            if quantity <= 0:
+                return {"action": "HOLD", "quantity": 0, "reasoning": "Insufficient funds for one share"}
             return {"action": "BUY", "quantity": quantity,
                     "reasoning": f"Buy: RSI={rsi:.1f}, MACD_cross={macd_cross_up}, trend_up={trend_up}"}
 

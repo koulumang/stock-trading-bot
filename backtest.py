@@ -1,8 +1,13 @@
+import json
+import os
 import pandas as pd
+from datetime import datetime
 from data_fetcher import get_historic_data
 from portfolio import Portfolio
 from strategy import get_trade_decision
 from config import INITIAL_CASH_USD, INITIAL_CASH_INR
+
+BACKTEST_LOG_FILE = os.path.join(os.path.dirname(__file__), "backtest_log.json")
 
 WARMUP_BARS = 15  # bars needed for indicators (RSI/BB/MACD) to stabilise
 
@@ -79,7 +84,7 @@ def run_backtest(symbol, currency='$', period='3mo', interval='1d', initial_cash
 
     total_return = (final_status['total_value'] - initial_cash) / initial_cash * 100
 
-    return {
+    result = {
         "symbol":           symbol,
         "period":           period,
         "interval":         interval,
@@ -94,4 +99,20 @@ def run_backtest(symbol, currency='$', period='3mo', interval='1d', initial_cash
         "buy_trades":       len([t for t in trades if t['action'] == 'BUY']),
         "sell_trades":      len(sell_trades),
         "bars_analysed":    len(port_values),
+        "timestamp":        datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
+
+    # Persist result to backtest_log.json for cross-run comparison
+    try:
+        if os.path.exists(BACKTEST_LOG_FILE):
+            with open(BACKTEST_LOG_FILE, "r") as f:
+                log = json.load(f)
+        else:
+            log = []
+        log.append(result)
+        with open(BACKTEST_LOG_FILE, "w") as f:
+            json.dump(log, f, indent=2)
+    except Exception:
+        pass  # never let logging failure break the API response
+
+    return result
